@@ -32,8 +32,8 @@ hipfire diag
 The `hipfire` wrapper is globally available. On the first run, the JIT compiler will automatically compile kernels for your GPU architecture using the built-in toolchains.
 
 ```sh
-hipfire pull qwen3.5:0.5b
-hipfire run qwen3.5:0.5b "Hello, world!"
+hipfire pull qwen3.5:0.8b
+hipfire run qwen3.5:0.8b "Hello, world!"
 ```
 
 To run the OpenAI-compatible HTTP server:

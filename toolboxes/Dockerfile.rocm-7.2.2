@@ -24,6 +24,11 @@ RUN dnf -y --nodocs --setopt=install_weak_deps=False \
   git-core vim sudo rsync patch unzip bash curl \
   && dnf clean all && rm -rf /var/cache/dnf/*
 
+# add rocm libraries to ldconfig so dlopen works
+RUN echo "/opt/rocm/lib" > /etc/ld.so.conf.d/rocm.conf \
+  && echo "/opt/rocm/lib64" >> /etc/ld.so.conf.d/rocm.conf \
+  && ldconfig
+
 # rocm env
 ENV ROCM_PATH=/opt/rocm \
   HIP_PATH=/opt/rocm \
