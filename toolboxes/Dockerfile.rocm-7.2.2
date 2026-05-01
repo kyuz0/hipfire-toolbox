@@ -1,0 +1,99 @@
+FROM registry.fedoraproject.org/fedora:43
+
+# rocm 7.2.2 repo
+RUN <<'EOF'
+tee /etc/yum.repos.d/rocm.repo <<REPO
+[ROCm-7.2.2]
+name=ROCm7.2.2
+baseurl=https://repo.radeon.com/rocm/rhel10/7.2.2/main
+enabled=1
+priority=50
+gpgcheck=1
+gpgkey=https://repo.radeon.com/rocm/rocm.gpg.key
+REPO
+EOF
+
+# install dependencies and toolchains (keeping them in the image as requested)
+RUN dnf -y --nodocs --setopt=install_weak_deps=False \
+  --exclude='*sdk*' --exclude='*samples*' --exclude='*-doc*' --exclude='*-docs*' \
+  install \
+  make gcc cmake lld clang clang-devel compiler-rt libcurl-devel ninja-build \
+  rocm-llvm rocm-device-libs hip-runtime-amd hip-devel \
+  rocblas rocblas-devel hipblas hipblas-devel rocm-cmake libomp-devel libomp \
+  rocminfo radeontop \
+  git-core vim sudo rsync patch unzip bash curl \
+  && dnf clean all && rm -rf /var/cache/dnf/*
+
+# rocm env
+ENV ROCM_PATH=/opt/rocm \
+  HIP_PATH=/opt/rocm \
+  HIP_CLANG_PATH=/opt/rocm/llvm/bin \
+  HIP_DEVICE_LIB_PATH=/opt/rocm/amdgcn/bitcode \
+  PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
+
+# install rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# install bun
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:${PATH}"
+
+# clone hipfire
+WORKDIR /opt/hipfire
+ARG REPO=https://github.com/Kaden-Schutt/hipfire.git
+ARG BRANCH=master
+RUN git clone -b ${BRANCH} --single-branch ${REPO} .
+
+# build hipfire engine
+RUN cargo build --release --features deltanet --example daemon --example infer --example infer_hfq -p engine
+
+# setup installation directory
+RUN mkdir -p /usr/local/hipfire/bin /usr/local/hipfire/cli
+
+# copy binaries
+RUN cp target/release/examples/daemon /usr/local/hipfire/bin/ \
+  && cp target/release/examples/infer /usr/local/hipfire/bin/ \
+  && cp target/release/examples/infer_hfq /usr/local/hipfire/bin/
+
+# copy cli
+RUN cp cli/registry.json /usr/local/hipfire/cli/ \
+  && cp cli/package.json /usr/local/hipfire/cli/ \
+  && cp cli/index.ts /usr/local/hipfire/cli/
+
+# create global hipfire wrapper
+RUN <<'EOF'
+tee /usr/local/bin/hipfire <<'WRAPPER'
+#!/bin/bash
+set -e
+
+# Support bun in various possible paths (especially if run via toolbox where $HOME might change)
+if command -v bun >/dev/null 2>&1; then
+    BUN=bun
+elif [ -x "$HOME/.bun/bin/bun" ]; then
+    BUN="$HOME/.bun/bin/bun"
+elif [ -x "/root/.bun/bin/bun" ]; then
+    BUN="/root/.bun/bin/bun"
+else
+    echo "hipfire: 'bun' not found in PATH." >&2
+    exit 127
+fi
+
+export HIPFIRE_DIR="${HIPFIRE_DIR:-$HOME/.hipfire}"
+mkdir -p "$HIPFIRE_DIR"
+
+# Provide fallback for local models and bins inside the container directory
+export PATH="/usr/local/hipfire/bin:$PATH"
+
+exec "$BUN" run "/usr/local/hipfire/cli/index.ts" "$@"
+WRAPPER
+EOF
+RUN chmod +x /usr/local/bin/hipfire
+
+# profile script for ROCm
+RUN printf '%s\n' 'export PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH' 'export ROCM_PATH=/opt/rocm' 'export HIP_PATH=/opt/rocm' \
+  > /etc/profile.d/rocm.sh && chmod +x /etc/profile.d/rocm.sh \
+  && echo 'source /etc/profile.d/rocm.sh' >> /etc/bashrc
+
+# set bash as default
+CMD ["/bin/bash"]
