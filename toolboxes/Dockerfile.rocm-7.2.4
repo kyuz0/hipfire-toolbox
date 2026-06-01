@@ -51,8 +51,8 @@ ARG BRANCH=master
 RUN git clone -b ${BRANCH} --single-branch ${REPO} .
 
 # apply upstream fixes for global cli resolution and deepseek v4 rdna3 wmma
-COPY hipfire-rdna3-deepseek4.patch /opt/hipfire/
-RUN git apply hipfire-rdna3-deepseek4.patch
+RUN sed -i 's/let x_f16_ptr = self.ensure_fp16_x(x, batch_size \* k)?;$/let x_f16_ptr = if x.dtype == DType::F16 { x.buf.as_ptr() } else { self.ensure_fp16_x(x, batch_size * k)? };/' crates/rdna-compute/src/gemm.rs \
+  && sed -i 's/resolve(__dirname, `..\/target\/release\/examples\/daemon${exe}`),/resolve(__dirname, `..\/target\/release\/examples\/daemon${exe}`),\n      resolve(__dirname, `..\/bin\/daemon${exe}`),/' cli/index.ts
 
 # build hipfire engine
 RUN cargo build --release --features deltanet --example daemon --example infer --example infer_hfq -p hipfire-runtime
