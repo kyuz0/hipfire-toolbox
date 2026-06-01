@@ -1,11 +1,11 @@
 FROM registry.fedoraproject.org/fedora:43
 
-# rocm 7.2.2 repo
+# rocm 7.2.4 repo
 RUN <<'EOF'
 tee /etc/yum.repos.d/rocm.repo <<REPO
-[ROCm-7.2.2]
-name=ROCm7.2.2
-baseurl=https://repo.radeon.com/rocm/rhel10/7.2.2/main
+[ROCm-7.2.4]
+name=ROCm7.2.4
+baseurl=https://repo.radeon.com/rocm/rhel10/7.2.4/main
 enabled=1
 priority=50
 gpgcheck=1
@@ -51,7 +51,7 @@ ARG BRANCH=master
 RUN git clone -b ${BRANCH} --single-branch ${REPO} .
 
 # build hipfire engine
-RUN cargo build --release --features deltanet --example daemon --example infer --example infer_hfq -p engine
+RUN cargo build --release --features deltanet --example daemon --example infer --example infer_hfq -p hipfire-runtime
 
 # setup installation directory
 RUN mkdir -p /usr/local/hipfire/bin /usr/local/hipfire/cli

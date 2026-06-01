@@ -6,7 +6,7 @@ This project provides pre-built containers (“toolboxes”) for running the [hi
 
 | Container Tag | Backend/Stack | Purpose / Notes |
 | :--- | :--- | :--- |
-| `rocm-7.2.2` | ROCm 7.2.2 | Built on Fedora 43, includes full toolchains (Cargo, Bun, hipcc) for JIT compilation. |
+| `rocm-7.2.4` | ROCm 7.2.4 | Built on Fedora 43, includes full toolchains (Cargo, Bun, hipcc) for JIT compilation. |
 
 ## Quick Start
 
@@ -14,12 +14,12 @@ This project provides pre-built containers (“toolboxes”) for running the [hi
 Create and enter the toolbox. **(Ubuntu users: remember to use `distrobox` instead of `toolbox`).**
 
 ```sh
-toolbox create hipfire-rocm-7.2.2 \
-  --image docker.io/kyuz0/hipfire-toolbox:rocm-7.2.2 \
+toolbox create hipfire-rocm-7.2.4 \
+  --image docker.io/kyuz0/hipfire-toolbox:rocm-7.2.4 \
   -- --device /dev/dri --device /dev/kfd \
   --group-add video --group-add render --group-add sudo --security-opt seccomp=unconfined
 
-toolbox enter hipfire-rocm-7.2.2
+toolbox enter hipfire-rocm-7.2.4
 ```
 
 ### 2. Verify Installation
