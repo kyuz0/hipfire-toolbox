@@ -41,6 +41,15 @@ To run the OpenAI-compatible HTTP server:
 hipfire serve -d
 ```
 
+### 4. Running DeepSeek V4 Flash
+Hipfire supports DeepSeek V4 Flash out of the box using highly optimized 2-bit quantization (MQ2-Lloyd) for the routed MoE experts, while keeping Attention KV at Q8_0 for maximum quality. It also automatically fetches the MTP sidecar for speculative decoding to boost generation speeds. Note that this requires a minimum of **96 GB of VRAM**.
+
+To download and run it:
+```sh
+hipfire pull deepseek-v4-flash
+hipfire run deepseek-v4-flash "Explain how an APU works"
+```
+
 ## Keeping Updated
 
 Refresh your local toolbox container to the latest image build:
