@@ -51,7 +51,7 @@ ARG BRANCH=master
 RUN git clone -b ${BRANCH} --single-branch ${REPO} .
 
 # apply upstream fixes for global cli resolution and deepseek v4 rdna3 wmma
-COPY toolboxes/hipfire-rdna3-deepseek4.patch /opt/hipfire/
+COPY hipfire-rdna3-deepseek4.patch /opt/hipfire/
 RUN git apply hipfire-rdna3-deepseek4.patch
 
 # build hipfire engine
