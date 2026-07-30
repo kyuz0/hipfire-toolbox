@@ -6,6 +6,7 @@ set -e
 declare -A TOOLBOXES
 
 TOOLBOXES["hipfire-rocm-7.2.4"]="docker.io/kyuz0/hipfire-toolbox:rocm-7.2.4 --device /dev/dri --device /dev/kfd --group-add video --group-add render --group-add sudo --security-opt seccomp=unconfined"
+TOOLBOXES["hipfire-official-rocm-7.2.4"]="docker.io/kyuz0/hipfire-toolbox:official-rocm-7.2.4 --device /dev/dri --device /dev/kfd --group-add video --group-add render --group-add sudo --security-opt seccomp=unconfined"
 
 function usage() {
   echo "Usage: $0 [all|toolbox-name1 toolbox-name2 ...]"
