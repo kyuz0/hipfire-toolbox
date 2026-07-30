@@ -40,9 +40,10 @@ ENV ROCM_PATH=/opt/rocm \
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-# install bun
-RUN curl -fsSL https://bun.sh/install | bash
-ENV PATH="/root/.bun/bin:${PATH}"
+# install bun system-wide (BUN_INSTALL=/usr/local puts binary in /usr/local/bin,
+# accessible to non-root toolbox users — /root is mode 700 in Fedora containers)
+RUN curl -fsSL https://bun.sh/install | BUN_INSTALL=/usr/local bash
+ENV PATH="/usr/local/bin:${PATH}"
 
 # clone hipfire
 WORKDIR /opt/hipfire
@@ -86,6 +87,10 @@ fi
 
 export HIPFIRE_DIR="${HIPFIRE_DIR:-$HOME/.hipfire}"
 mkdir -p "$HIPFIRE_DIR"
+
+# Tell the CLI where the daemon binary is — it only checks HIPFIRE_DAEMON_BIN,
+# ../target/release/examples/daemon (relative to __dirname), and ~/.hipfire/bin/daemon
+export HIPFIRE_DAEMON_BIN="/usr/local/hipfire/bin/daemon"
 
 # Provide fallback for local models and bins inside the container directory
 export PATH="/usr/local/hipfire/bin:$PATH"
